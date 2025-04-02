@@ -139,6 +139,7 @@ int main(int argc, char** argv) {
     // Check if the allocation was successful
     if(thing == NULL) {
         printf("Failed to allocate memory\n");
+        printf("issue with malloc() allocation: thing");
         return 1;
     }
 
@@ -158,6 +159,7 @@ int main(int argc, char** argv) {
     // Check if the allocation was successful
     if(other_thing == NULL) {
         printf("Failed to allocate memory\n");
+        printf("issue with malloc() allocation: other_thing");
         return 1;
     }
 
@@ -172,8 +174,8 @@ int main(int argc, char** argv) {
     printf("%d\n", *other_thing);
 
     // Free the allocated memory
-    //tufree(thing);
-    //tufree(other_thing);
+    tufree(thing);
+    tufree(other_thing);
 
     // Create a new list
     HEAD = list_new(5);
@@ -181,6 +183,7 @@ int main(int argc, char** argv) {
     // Check if the allocation was successful
     if(HEAD == NULL) {
         printf("Failed to allocate memory\n");
+        printf("possible failure for freeing thing and other_thing -> list_new was not able to allocate");
         return 1;
     }
 
@@ -199,6 +202,7 @@ int main(int argc, char** argv) {
     // Check if the removal was successful
     if(ret != 0) {
         printf("Failed to remove element\n");
+        printf("free implmentation possibly not working, list remove did not work");
         return 1;
     }
 
@@ -209,11 +213,12 @@ int main(int argc, char** argv) {
     list_remove_all(HEAD);
 
     // Allocate memory and initialize to 0
-    /* int *more_things = tucalloc(10, sizeof(int));
+    int *more_things = tucalloc(10, sizeof(int));
 
     // Check if the allocation was successful
     if(more_things == NULL) {
         printf("Failed to allocate memory\n");
+        printf("calloc implmentation failed: more_things was assigned as NULL");
         return 1;
     }
 
@@ -239,6 +244,7 @@ int main(int argc, char** argv) {
     // Check if the reallocation was successful
     if(bigger_things == NULL) {
         printf("Failed to allocate memory\n");
+        printf("realloc implementation failed: bigger_things assigned as NULL");
         return 1;
     }
 
@@ -253,7 +259,7 @@ int main(int argc, char** argv) {
     }
 
     // Free the allocated memory
-    tufree(more_things); */
+    tufree(more_things);
 
     return 0;
 }

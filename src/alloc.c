@@ -175,22 +175,15 @@ void *tumalloc(size_t size) {
             if (curr_block->size >= size + sizeof(free_block)) {    //check if the block has more room than the allotment
                 split(curr_block, size);
 
-                free_block *leftovers = (free_block *)((char *)curr_block + size + sizeof(free_block));
-                
-                free_block *next_node = find_next(curr_block);
-                free_block *prev_node = find_prev(curr_block);
+                free_block *leftovers = (free_block *)((char *)curr_block + size + sizeof(free_block));     //leftover memory from the split
 
-                if(next_node) {
-                    leftovers->next = next_node;
-                }
-                else {
+                if(HEAD == NULL || HEAD->next == NULL) {
                     leftovers->next = NULL;
-                }
-                if(prev_node) {
-                    prev_node->next = leftovers;
+                    HEAD = leftovers;
                 }
                 else {
-                    prev_node->next = NULL;
+                    leftovers->next = HEAD;
+                    HEAD = leftovers;
                 }
             }
             
@@ -216,7 +209,7 @@ void *tucalloc(size_t num, size_t size) {
         return NULL;
     }
 
-    if(size != size / num) {
+    if(num > 0 && size > 0 && (num > ((size_t)-1) / size)) { //overflow check, MAX_SIZE would not work even with the necessary header, something about the Intellisense Include Path 
         return NULL;
     }
 
@@ -236,26 +229,26 @@ void *tucalloc(size_t num, size_t size) {
  * @return A new pointer containing the contents of ptr, but with the new_size
  */
 void *turealloc(void *ptr, size_t new_size) {
-    free_block *header = (free_block *)((char *)ptr - sizeof(free_block));
-    void *redo;
+    free_block *header = (free_block *)((char *)ptr - sizeof(free_block)); //find the header of ptr and assign it to header
+    void *redo;         //assign this later, for now just initialize 
 
-    if(!ptr || !new_size) {
+    if(!ptr || !new_size) {         //error checking, makes sure there is a valid input for the function
         return tumalloc(new_size);
     }
 
-    if(header->size >= new_size){
+    if(header->size >= new_size){       //check if the header size is larger than the new reallocation size
         return ptr;
     }
 
-    redo = tumalloc(new_size);
+    redo = tumalloc(new_size);          //allocate new_size amount of memory
 
-    if(!redo) {
+    if(!redo) {                         //if the allocation fails, return no value
         return NULL;
     }
 
-    if(redo) {
-        memcpy(redo, ptr, new_size < header->size ? new_size : header->size);
-        tufree(ptr);
+    else {
+        memcpy(redo, ptr, new_size < header->size ? new_size : header->size);       //copies memory to redo, from pointer, with the bytes specified to copy to the new reallocated piece of memory
+        tufree(ptr);                    //free the previous piece of allocated memory
     }
 
     return redo;
@@ -267,28 +260,28 @@ void *turealloc(void *ptr, size_t new_size) {
  * @param ptr Pointer to the allocated piece of memory
  */
 void tufree(void *ptr) {
-    void *programbreak;
-    free_block *tmp = (free_block *)((char *)ptr - sizeof(free_block));
+    void *programbreak;             //end of the heap
+    free_block *tmp = (free_block *)((char *)ptr - sizeof(free_block));     //temporary pointer
 
-    if(!ptr) {
+    if(!ptr) {              //if no valid input, break from the function
         return;
     }
 
-    programbreak = sbrk(0);
-    if ((char *)tmp+ tmp->size + sizeof(free_block) == programbreak) {
-        if(HEAD == tmp) {
+    programbreak = sbrk(0);     //assign to end of heap
+    if ((char *)tmp+ tmp->size + sizeof(free_block) == programbreak) {      //check that the memory we're deallocating is at the end of the heap
+        if(HEAD == tmp) {       //check that tmp is not already the HEAD
             HEAD = NULL;
         }
         else {
-           free_block *prev_pointer = find_prev(tmp);
-           if(prev_pointer) {
-                prev_pointer->next = NULL;
+           free_block *prev_pointer = find_prev(tmp);       //find the previous node in the free list
+           if(prev_pointer) {                               //if there is one,
+                prev_pointer->next = NULL;                  //break the reference of the previous node to tmp
            }
         }
-        sbrk(-(tmp->size + sizeof(free_block)));   
+        sbrk(-(tmp->size + sizeof(free_block)));            //deallocate memory based on the total size of tmp
     }
     else {
-        if(HEAD == NULL || HEAD->next == NULL) {
+        if(HEAD == NULL || HEAD->next == NULL) {            
             tmp->next = NULL;
             HEAD = tmp;
         }

@@ -211,7 +211,7 @@ void *tumalloc(size_t size) {
  * @return A pointer to the requested block of initialized memory
  */
 void *tucalloc(size_t num, size_t size) {
-    void *block;
+    free_block *block;
     if(!num || !size){
         return NULL;
     }
@@ -220,7 +220,7 @@ void *tucalloc(size_t num, size_t size) {
         return NULL;
     }
 
-    block = malloc(size);
+    block = tumalloc(num * size);
     if(!block) {
         return NULL;
     }
@@ -240,18 +240,25 @@ void *turealloc(void *ptr, size_t new_size) {
     void *redo;
 
     if(!ptr || !new_size) {
-        return malloc(new_size);
+        return tumalloc(new_size);
     }
 
     if(header->size >= new_size){
         return ptr;
     }
 
-    redo = malloc(new_size);
-    if(redo) {
-        memcpy(redo, ptr, header->size);
-        free_block(ptr);
+    redo = tumalloc(new_size);
+
+    if(!redo) {
+        return NULL;
     }
+
+    if(redo) {
+        memcpy(redo, ptr, new_size < header->size ? new_size : header->size);
+        tufree(ptr);
+    }
+
+    return redo;
 }
 
 /**
@@ -268,8 +275,8 @@ void tufree(void *ptr) {
     }
 
     programbreak = sbrk(0);
-    if ((char *)ptr + tmp->size + sizeof(free_block) == programbreak) {
-        if(tmp == HEAD) {
+    if ((char *)tmp+ tmp->size + sizeof(free_block) == programbreak) {
+        if(HEAD == tmp) {
             HEAD = NULL;
         }
         else {
@@ -278,18 +285,16 @@ void tufree(void *ptr) {
                 prev_pointer->next = NULL;
            }
         }
-        sbrk(0 - tmp->size - sizeof(free_block));   
+        sbrk(-(tmp->size + sizeof(free_block)));   
     }
     else {
-        if(HEAD->next == NULL) {
+        if(HEAD == NULL || HEAD->next == NULL) {
             tmp->next = NULL;
-            HEAD->next = tmp;
+            HEAD = tmp;
         }
         else {
-            tmp->next = HEAD->next;
-            HEAD->next = tmp;
+            tmp->next = HEAD;
+            HEAD = coalesce(tmp);
         }
-        
-        coalesce(tmp);
     }
 }

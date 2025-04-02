@@ -135,6 +135,7 @@ static node *HEAD = NULL;
 int main(int argc, char** argv) {
     // Allocate some memory
     int *thing = (int*)tumalloc(5*sizeof(int));
+    // printf("malloc() allocation: thing\n");
 
     // Check if the allocation was successful
     if(thing == NULL) {
@@ -155,6 +156,7 @@ int main(int argc, char** argv) {
 
     // Allocate memory for an int array
     int *other_thing = (int*)tumalloc(5*sizeof(int));
+    // printf("malloc() allocation: other_thing\n");
 
     // Check if the allocation was successful
     if(other_thing == NULL) {
@@ -183,7 +185,7 @@ int main(int argc, char** argv) {
     // Check if the allocation was successful
     if(HEAD == NULL) {
         printf("Failed to allocate memory\n");
-        printf("possible failure for freeing thing and other_thing -> list_new was not able to allocate");
+        // printf("problem mallocing thing and other_thing");
         return 1;
     }
 
@@ -198,6 +200,7 @@ int main(int argc, char** argv) {
 
     // Remove an element from the list
     int ret = list_remove(&HEAD, 0);
+    // printf("free implmentation\n");
 
     // Check if the removal was successful
     if(ret != 0) {
@@ -214,6 +217,7 @@ int main(int argc, char** argv) {
 
     // Allocate memory and initialize to 0
     int *more_things = tucalloc(10, sizeof(int));
+    // printf("calloc implmentation\n");
 
     // Check if the allocation was successful
     if(more_things == NULL) {
@@ -240,6 +244,7 @@ int main(int argc, char** argv) {
 
     // Reallocate memory
     int *bigger_things = turealloc(more_things, 20*sizeof(int));
+    // printf("realloc implementation\n");
 
     // Check if the reallocation was successful
     if(bigger_things == NULL) {
